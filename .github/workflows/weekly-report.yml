@@ -1,0 +1,28 @@
+# Copy to .github/workflows/weekly-report.yml
+# Builds the business review every Monday 09:00 IST and attaches it to the run.
+# Add the repository secrets LLM_BASE_URL, LLM_API_KEY, LLM_MODEL for an LLM-written
+# summary; without them the template summary is used.
+name: weekly-report
+on:
+  schedule:
+    - cron: "30 3 * * 1"      # Monday 03:30 UTC = 09:00 IST
+  workflow_dispatch:
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python -m finbot generate
+      - run: python -m finbot report
+        env:
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: business-review
+          path: reports/
